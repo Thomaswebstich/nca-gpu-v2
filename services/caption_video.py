@@ -22,6 +22,10 @@ import logging
 import requests
 import subprocess
 from services.file_management import download_file
+import torch
+
+def is_gpu_available():
+    return torch.cuda.is_available()
 
 # Set the default local storage directory
 STORAGE_PATH = "/tmp/"
@@ -208,7 +212,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             ffmpeg.input(video_path).output(
                 output_path,
                 vf=subtitle_filter,
-                acodec='copy'
+                acodec='copy',
+                **({'vcodec': 'h264_nvenc'} if is_gpu_available() else {})
             ).run()
             logger.info(f"Job {job_id}: FFmpeg processing completed, output file at {output_path}")
         except ffmpeg.Error as e:

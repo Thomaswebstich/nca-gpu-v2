@@ -36,7 +36,10 @@ if not logger.hasHandlers():
 def take_screenshot(data: dict, job_id=None):
     p = sync_playwright().start()
     try:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(
+            headless=True,
+            args=['--use-gl=egl', '--no-sandbox', '--disable-setuid-sandbox']
+        )
         try:
             context = browser.new_context(
                 viewport={"width": data.get("viewport_width", 1280), "height": data.get("viewport_height", 720)},

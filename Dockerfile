@@ -1,8 +1,13 @@
 # Base image
-FROM python:3.10-slim
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies, build tools, and libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-dev \
     ca-certificates \
     wget \
     tar \
@@ -53,7 +58,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpangocairo-1.0-0 \
     libpangoft2-1.0-0 \
     libgtk-3-0 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /usr/bin/python3 /usr/bin/python
 
 # Install SRT from source (latest version using cmake)
 RUN git clone https://github.com/Haivision/srt.git && \
@@ -113,41 +119,52 @@ RUN git clone https://github.com/libass/libass.git && \
     ldconfig && \
     cd .. && rm -rf libass
 
-# Build and install FFmpeg with all required features
+# Build and install FFMPEG with NVENC support
+# First, install nv-codec-headers
+RUN git clone https://git.videolan.org/git/ffmpeg/nv-codec-headers.git && \
+    cd nv-codec-headers && \
+    make -j$(nproc) && \
+    make install && \
+    cd .. && rm -rf nv-codec-headers
+
+# Build and install FFmpeg with all required features + CUDA
 RUN git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg && \
     cd ffmpeg && \
     git checkout n7.0.2 && \
     PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig" \
-    CFLAGS="-I/usr/include/freetype2" \
-    LDFLAGS="-L/usr/lib/x86_64-linux-gnu" \
+    CFLAGS="-I/usr/include/freetype2 -I/usr/local/cuda/include" \
+    LDFLAGS="-L/usr/lib/x86_64-linux-gnu -L/usr/local/cuda/lib64" \
     ./configure --prefix=/usr/local \
-        --enable-gpl \
-        --enable-pthreads \
-        --enable-neon \
-        --enable-libaom \
-        --enable-libdav1d \
-        --enable-librav1e \
-        --enable-libsvtav1 \
-        --enable-libvmaf \
-        --enable-libzimg \
-        --enable-libx264 \
-        --enable-libx265 \
-        --enable-libvpx \
-        --enable-libwebp \
-        --enable-libmp3lame \
-        --enable-libopus \
-        --enable-libvorbis \
-        --enable-libtheora \
-        --enable-libspeex \
-        --enable-libass \
-        --enable-libfreetype \
-        --enable-libharfbuzz \
-        --enable-fontconfig \
-        --enable-libsrt \
-        --enable-filter=drawtext \
-        --extra-cflags="-I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include" \
-        --extra-ldflags="-L/usr/lib/x86_64-linux-gnu -lfreetype -lfontconfig" \
-        --enable-gnutls \
+    --enable-gpl \
+    --enable-pthreads \
+    --enable-neon \
+    --enable-libaom \
+    --enable-libdav1d \
+    --enable-librav1e \
+    --enable-libsvtav1 \
+    --enable-libvmaf \
+    --enable-libzimg \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-libvpx \
+    --enable-libwebp \
+    --enable-libmp3lame \
+    --enable-libopus \
+    --enable-libvorbis \
+    --enable-libtheora \
+    --enable-libspeex \
+    --enable-libass \
+    --enable-libfreetype \
+    --enable-libharfbuzz \
+    --enable-fontconfig \
+    --enable-libsrt \
+    --enable-filter=drawtext \
+    --extra-cflags="-I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include" \
+    --extra-ldflags="-L/usr/lib/x86_64-linux-gnu -lfreetype -lfontconfig" \
+    --enable-gnutls \
+    --enable-cuda-nvcc \
+    --enable-libnpp \
+    --enable-nonfree \
     && make -j$(nproc) && \
     make install && \
     cd .. && rm -rf ffmpeg
@@ -175,7 +192,7 @@ COPY requirements.txt .
 
 # Install Python dependencies, upgrade pip 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu118 && \
     pip install openai-whisper && \
     pip install playwright && \
     pip install jsonschema 
@@ -204,7 +221,7 @@ EXPOSE 8080
 ENV PYTHONUNBUFFERED=1
 
 RUN echo '#!/bin/bash\n\
-gunicorn --bind 0.0.0.0:8080 \
+    gunicorn --bind 0.0.0.0:8080 \
     --workers ${GUNICORN_WORKERS:-2} \
     --timeout ${GUNICORN_TIMEOUT:-300} \
     --worker-class sync \

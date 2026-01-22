@@ -22,6 +22,10 @@ import json
 import re
 from services.file_management import download_file
 from config import LOCAL_STORAGE_PATH
+import torch
+
+def is_gpu_available():
+    return torch.cuda.is_available()
 
 def get_extension_from_format(format_name):
     # Mapping of common format names to file extensions
@@ -161,6 +165,13 @@ def process_ffmpeg_compose(data, job_id):
                 break
         
         extension = get_extension_from_format(format_name) if format_name else 'mp4'
+        
+        # Check for GPU and modify output options if using default encoder (or lack thereof implies default)
+        # Only apply NVENC if output is video and we are not just stream copying
+        has_video_encoder = any(opt['option'] == '-c:v' for opt in output['options'])
+        if extension in ['mp4', 'mkv', 'mov'] and not has_video_encoder and is_gpu_available():
+            command.extend(['-c:v', 'h264_nvenc'])
+            
         output_filename = os.path.join(LOCAL_STORAGE_PATH, f"{job_id}_output_{i}.{extension}")
         output_filenames.append(output_filename)
         

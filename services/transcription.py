@@ -19,6 +19,7 @@
 import os
 import whisper
 import srt
+import torch
 from datetime import timedelta
 from whisper.utils import WriteSRT, WriteVTT
 from services.file_management import download_file
@@ -39,8 +40,9 @@ def process_transcription(media_url, output_type, max_chars=56, language=None,):
     logger.info(f"Downloaded media to local file: {input_filename}")
 
     try:
-        model = whisper.load_model("base")
-        logger.info("Loaded Whisper model")
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model = whisper.load_model("base", device=device)
+        logger.info(f"Loaded Whisper model on {device}")
 
         # result = model.transcribe(input_filename)
         # logger.info("Transcription completed")
