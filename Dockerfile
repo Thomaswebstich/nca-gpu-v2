@@ -219,7 +219,8 @@ ENV PYTHONUNBUFFERED=1
 
 RUN cat <<EOF > /app/run_gunicorn.sh
 #!/bin/bash
-gunicorn --bind [::]:8080 \
+sleep 2
+gunicorn --bind "[::]:8080" \
 --workers \${GUNICORN_WORKERS:-1} \
 --timeout \${GUNICORN_TIMEOUT:-3600} \
 --worker-class sync \
