@@ -16,7 +16,7 @@
 
 
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from queue import Queue
 from services.webhook import send_webhook
 import threading
@@ -36,6 +36,13 @@ def create_app():
     # Create a queue to hold tasks
     task_queue = Queue()
     queue_id = id(task_queue)  # Generate a single queue_id for this worker
+
+    # Simple health check endpoint for Salad Cloud (move up to avoid blueprint issues)
+    @app.route('/health')
+    def health():
+        import logging
+        logging.info("💚 Health check probe received")
+        return "healthy", 200
 
     # Function to process tasks from the queue
     def process_queue():
@@ -345,4 +352,4 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host="::", port=8080)

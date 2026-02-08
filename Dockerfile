@@ -220,15 +220,17 @@ EXPOSE 8080
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 
-RUN echo '#!/bin/bash\n\
-    gunicorn --bind 0.0.0.0:8080 \
-    --workers ${GUNICORN_WORKERS:-2} \
-    --timeout ${GUNICORN_TIMEOUT:-300} \
-    --worker-class sync \
-    --keep-alive 80 \
-    --config gunicorn.conf.py \
-    app:app' > /app/run_gunicorn.sh && \
-    chmod +x /app/run_gunicorn.sh
+RUN cat <<EOF > /app/run_gunicorn.sh
+#!/bin/bash
+gunicorn --bind [::]:8080 \
+--workers \${GUNICORN_WORKERS:-1} \
+--timeout \${GUNICORN_TIMEOUT:-3600} \
+--worker-class sync \
+--keep-alive 80 \
+--config gunicorn.conf.py \
+app:app
+EOF
+RUN chmod +x /app/run_gunicorn.sh
 
 # Run the shell script
 CMD ["/app/run_gunicorn.sh"]
