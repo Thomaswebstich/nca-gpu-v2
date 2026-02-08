@@ -105,12 +105,14 @@ def discover_and_register_blueprints(app, base_dir='routes'):
         base_dir = os.path.join(cwd, base_dir)
     
     registered_blueprints = set()
+    pid = os.getpid()
     
     # Find all Python files in the routes directory, including subdirectories
     python_files = glob.glob(os.path.join(base_dir, '**', '*.py'), recursive=True)
-    logger.info(f"Found {len(python_files)} Python files in {base_dir}")
+    logger.info(f"PID {pid} Found {len(python_files)} Python files in {base_dir}")
     
     for file_path in python_files:
+        module_path = "unknown"
         try:
             # Convert file path to import path
             rel_path = os.path.relpath(file_path, cwd)
@@ -123,7 +125,7 @@ def discover_and_register_blueprints(app, base_dir='routes'):
             if module_path.endswith('__init__'):
                 continue
                 
-            #logger.info(f"Attempting to import module: {module_path}")
+            logger.info(f"PID {pid} Attempting to import module: {module_path}")
             
             # Import the module
             module = importlib.import_module(module_path)
@@ -131,13 +133,12 @@ def discover_and_register_blueprints(app, base_dir='routes'):
             # Find all Blueprint instances in the module
             for name, obj in inspect.getmembers(module):
                 if isinstance(obj, Blueprint) and obj not in registered_blueprints:
-                    pid = os.getpid()
-                    logger.info(f"PID {pid} Registering: {module_path}")
+                    logger.info(f"PID {pid} Registering blueprint from: {module_path}")
                     app.register_blueprint(obj)
                     registered_blueprints.add(obj)
             
         except Exception as e:
-            logger.error(f"Error importing module {module_path}: {str(e)}")
+            logger.error(f"PID {pid} Error importing module {module_path}: {str(e)}")
     
     logger.info(f"PID {pid} Registered {len(registered_blueprints)} blueprints")
     return registered_blueprints
