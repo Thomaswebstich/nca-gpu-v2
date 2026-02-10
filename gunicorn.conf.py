@@ -28,7 +28,7 @@ import time
 #              at startup when running as a GCP Cloud Run Job, and shut down the server
 #              once the job completes or if an error occurs.
 
-bind = "[::]:8080"
+bind = ["0.0.0.0:8080", "[::]:8080"]
 workers = int(os.environ.get("GUNICORN_WORKERS", 1))
 timeout = int(os.environ.get("GUNICORN_TIMEOUT", 3600))
 keepalive = 80
