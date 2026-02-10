@@ -22,6 +22,9 @@ from services.webhook import send_webhook
 import threading
 import uuid
 import os
+import logging
+
+print("🚀 NCA-GPU-V2 PYTHON STARTUP: LOADING SYSTEM...")
 import time
 import json
 from version import BUILD_NUMBER  # Import the BUILD_NUMBER
@@ -351,5 +354,4 @@ def create_app():
 
 app = create_app()
 
-if __name__ == '__main__':
-    app.run(host="::", port=8080)
+# Removed app.run() to avoid conflicts with Gunicorn
