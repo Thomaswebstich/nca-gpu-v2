@@ -19,6 +19,11 @@
 
 # Author: Harrison Fisher (https://github.com/HarrisonFisher)
 # Date: May 2025
+import os
+import json
+import requests
+import time
+
 # Description: This script configures the server to automatically trigger a job request
 #              at startup when running as a GCP Cloud Run Job, and shut down the server
 #              once the job completes or if an error occurs.
@@ -29,10 +34,6 @@ timeout = int(os.environ.get("GUNICORN_TIMEOUT", 3600))
 keepalive = 80
 worker_class = "sync"
 
-import os
-import json
-import requests
-import time
 
 def cloud_run_job_task():
     """Execute a single job request and shut down."""
