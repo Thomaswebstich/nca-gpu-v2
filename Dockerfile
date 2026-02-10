@@ -126,7 +126,7 @@ RUN git clone https://git.videolan.org/git/ffmpeg/nv-codec-headers.git && \
     cd .. && rm -rf nv-codec-headers
 
 # Build and install FFmpeg with all required features + CUDA
-RUN git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg && \
+RUN git clone https://github.com/FFmpeg/FFmpeg.git ffmpeg && \
     cd ffmpeg && \
     git checkout n7.0.2 && \
     PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig" \
