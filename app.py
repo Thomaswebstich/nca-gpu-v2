@@ -42,11 +42,9 @@ def create_app():
     task_queue = Queue()
     queue_id = id(task_queue)  # Generate a single queue_id for this worker
 
-    # Simple health check endpoint for Salad Cloud (move up to avoid blueprint issues)
+    # Simple health check endpoint for Salad Cloud
     @app.route('/health')
     def health():
-        import logging
-        logging.info("💚 Health check probe received")
         return "healthy", 200
 
     # Function to process tasks from the queue
