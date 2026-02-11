@@ -222,7 +222,7 @@ ENV PYTHONUNBUFFERED=1
 
 RUN cat <<EOF > /app/run_gunicorn.sh
 #!/bin/bash
-echo "🚀 NCA-GPU-V2 VERSION 245 STARTING..."
+echo "🚀 NCA-GPU-V2 VERSION 253 STARTING..."
 sleep 2
 gunicorn --config gunicorn.conf.py app:app
 EOF

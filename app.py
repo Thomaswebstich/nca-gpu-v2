@@ -23,6 +23,8 @@ import threading
 import uuid
 import os
 import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 print("🚀 NCA-GPU-V2 PYTHON STARTUP: LOADING SYSTEM...")
 import time
